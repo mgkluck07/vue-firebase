@@ -9,7 +9,7 @@
                         </v-toolbar-title>
                     </v-toolbar>
                     <v-card-text>
-                        <v-text-field label="Email" v-model="formulario.email" :error-messages="erroresEmail" @blur="$v.formulario.email.$touch()"></v-text-field>
+                        <v-text-field label="Email" type="email" v-model="formulario.email" :error-messages="erroresEmail" @blur="$v.formulario.email.$touch()"></v-text-field>
                         <v-text-field label="Password" @keyup.enter="ingresar" type="password" v-model="formulario.password" :error-messages="erroresPassword" @blur="$v.formulario.password.$touch()"></v-text-field>
                     </v-card-text>
                     <v-card-text>
@@ -53,7 +53,28 @@ export default {
                 this.$v.formulario.$touch();
                 return
             }
-            alert('...Consultando');
+            let usuario = {
+                userName: 'newton',
+                nombre: 'Isaac',
+                apellido: 'Newton',
+                sexo: 'M',
+                descripcion: 'Descripción',
+                biografia: 'https://es.wikipedia.org/wiki/Isaac_Newton',
+                fotoPerfil: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Sir_Isaac_Newton_%281643-1727%29.jpg/800px-1727%29.jpg'
+            }
+
+            let ocupado = {
+                titulo: "Validando credenciales",
+                mensajee: "Estamos validando tu informacion ..."
+            }
+
+            this.$store.commit('mostrarOcupado',ocupado);        
+
+            setTimeout(() => {
+                this.$store.commit('ocultarOcupado');
+                this.$store.commit('actualizarUsuario',usuario);
+                this.$store.commit('mostrarExito',this.$store.getters.saludo);
+            }, 1000);
         }
     },
     computed: {

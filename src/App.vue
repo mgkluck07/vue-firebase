@@ -10,7 +10,7 @@
 					  <v-list-tile-title v-text="'Inicio'"></v-list-tile-title>
 				  </v-list-tile-content>
 			  </v-list-tile>
-			  <v-list-tile @click="seleccionar('perfil')">
+			  <v-list-tile v-if="usuario" @click="seleccionar('perfil')">
 				  <v-list-tile-action>
 					  <v-icon>account_circle</v-icon>
 				  </v-list-tile-action>
@@ -18,20 +18,20 @@
 					  <v-list-tile-title v-text="'Perfil'"></v-list-tile-title>
 				  </v-list-tile-content>
 			  </v-list-tile>
-			  <v-list-tile @click="seleccionar('registro')">
-				  <v-list-tile-action>
-					  <v-icon>contact_mail</v-icon>
-				  </v-list-tile-action>
-				  <v-list-tile-content>
-					  <v-list-tile-title v-text="'Registro'"></v-list-tile-title>
-				  </v-list-tile-content>
-			  </v-list-tile>
-			  <v-list-tile @click="seleccionar('login')">
+			  <v-list-tile v-if="!usuario" @click="seleccionar('login')">
 				  <v-list-tile-action>
 					  <v-icon>arrow_forward</v-icon>
 				  </v-list-tile-action>
 				  <v-list-tile-content>
 					  <v-list-tile-title v-text="'Login'"></v-list-tile-title>
+				  </v-list-tile-content>
+			  </v-list-tile>
+			  <v-list-tile v-if="usuario" @click="salir">
+				  <v-list-tile-action>
+					  <v-icon>arrow_back</v-icon>
+				  </v-list-tile-action>
+				  <v-list-tile-content>
+					  <v-list-tile-title v-text="'Salir'"></v-list-tile-title>
 				  </v-list-tile-content>
 			  </v-list-tile>
 		  </v-list>
@@ -41,20 +41,44 @@
       <v-toolbar-title @click="componenteActual = 'home'" class="headline logo">
         <span>{{titulo}}</span>
       </v-toolbar-title>
+			<v-spacer></v-spacer>
+			<span v-if="usuario">{{ usuario.nombre }}</span>
     </v-toolbar>
 
     <v-content>
-		<v-container fluid fill-height>
-			<v-slide-y-transition mode="out-in">
-				<component :is="componenteActual"></component>
-			</v-slide-y-transition>
-		</v-container>
+			<v-container fluid fill-height>
+				<v-slide-y-transition mode="out-in">
+					<component :is="componenteActual"></component>
+				</v-slide-y-transition>
+			</v-container>
     </v-content>
-	<v-footer color="primary" dark>
-		<v-layout justify-center>
-			<span>Curso Vue.js y Firebase - &copy; 2019</span>
-		</v-layout>
-	</v-footer>
+
+		<v-snackbar v-model="notificacion.visible" :color="notificacion.color" multi-line top :timeout="6000" dark>
+			{{notificacion.mensaje}}
+			<v-btn color="white" flat @click="ocultarNotificacion">Cerrar</v-btn>
+		</v-snackbar>
+
+		<v-dialog v-model="ocupado.visible" max-width="400" persistent>
+			<v-card>
+				<v-toolbar color="primary" dark card>
+					<v-toolbar-title>
+						{{ocupado.titulo}}
+					</v-toolbar-title>
+				</v-toolbar>
+				<v-card-text class="subheading">
+					{{ocupado.mensaje}}
+				</v-card-text>
+				<v-card-text>
+					<v-progress-linear :indeterminate="true" color="primary"></v-progress-linear>
+				</v-card-text>
+			</v-card>
+		</v-dialog>
+
+		<v-footer color="primary" dark>
+			<v-layout justify-center>
+				<span>Curso Vue.js y Firebase - &copy; 2019</span>
+			</v-layout>
+		</v-footer>
   </v-app>
 </template>
 
@@ -68,16 +92,34 @@ export default {
   components: {Home,Registro,Login,Perfil},
   data () {
     return {
-	  titulo: 'Súper Opera',
-	  componenteActual: 'home',
-	  menu: false
+			titulo: 'Súper Opera',
+			componenteActual: 'home',
+			menu: false
     }
-  },
+	},
+	computed: {
+		usuario(){
+			return this.$store.state.usuario;
+		},
+		notificacion(){
+			return this.$store.state.notificacion;
+		},
+		ocupado(){
+			return this.$store.state.ocupado;
+		}
+	},
   methods: {
-	seleccionar(nombre){
-		this.componenteActual = nombre;
-		this.menu = false;
-	}
+		seleccionar(nombre){
+			this.componenteActual = nombre;
+			this.menu = false;
+		},
+		ocultarNotificacion(){
+			this.$store.commit('ocultarNotificacion')
+		},
+		salir(){
+			this.$store.dispatch('salir');
+			this.menu = false;
+		}
   },
 }
 </script>
