@@ -135,8 +135,42 @@
                   <v-btn
                     :depressed="$v.fechaNacimiento.$invalid"
                     :disabled="$v.fechaNacimiento.$invalid"
-                    @click="registrar"
+                    @click="siguiente(3)"
                     color="secondary"
+                  >Siguiente</v-btn>
+                </v-layout>
+              </v-flex>
+            </v-layout>
+          </v-card-text>
+        </v-card>
+        <v-card v-if="vista == 4" :key="4" class="elevation-6">
+          <v-toolbar color="primary" dark card>
+            <v-toolbar-title>Ingresa un nombre de usuario</v-toolbar-title>
+          </v-toolbar>
+          <v-card-text>
+            <v-text-field
+              autofocus
+              @keyup.enter="siguiente(2)"
+              @blur="$v.userName.$touch()"
+              :error-messages="erroresUserName"
+              v-model="userName"
+              label="Nombre de usuario"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-text>
+            <v-layout>
+              <v-flex xs6>
+                <v-layout justify-start>
+                  <v-btn @click="vista--">Atras</v-btn>
+                </v-layout>
+              </v-flex>
+              <v-flex xs6>
+                <v-layout justify-end>
+                  <v-btn
+                    :depressed="$v.userName.$invalid"
+                    :disabled="$v.userName.$invalid"
+                    color="secondary"
+                    @click="registrar"
                   >Registrarse</v-btn>
                 </v-layout>
               </v-flex>
@@ -155,6 +189,7 @@ import {
   minLength,
   maxLength,
   sameAs,
+  alphaNum,
 } from "vuelidate/lib/validators";
 import { nombreCompuesto } from "@/utilidades/validaciones";
 import { firebase, auth, db } from "@/firebase";
@@ -175,6 +210,7 @@ export default {
       },
       fechaNacimiento: null,
       fechaMaxima: null,
+      userName: '',
     };
   },
   validations: {
@@ -209,6 +245,12 @@ export default {
     fechaNacimiento: {
       required,
     },
+    userName: {
+        required,
+        minLength: minLength(5),
+        maxLength: maxLength(25),
+        alphaNum
+    }
   },
   created() {
     let fechaActual = new Date();
@@ -253,12 +295,27 @@ export default {
             this.vista++;
           }
           break;
+        case 3:
+          if (this.$v.fechaNacimiento.$invalid) {
+            this.$v.fechaNacimiento.$touch();
+            return;
+          } else {
+            this.vista++;
+          }
+          break;
       }
     },
     async registrar() {
-      if (this.$v.fechaNacimiento.$invalid) {
+      if (this.$v.userName.$invalid) {
         return;
       }
+      let userNameExistente = await db.collection('userNames').doc(this.userName.toLowerCase()).get();
+      
+      if(userNameExistente.exists){
+        this.mostrarAdvertencia(`El nombre de usuario '${this.userName}', ya está tomado, selecciona uno diferente.`);
+        return;
+      }
+
       switch (this.metodo) {
         case "password":
           this.registrarEmail();
@@ -363,19 +420,29 @@ export default {
     async guardarUsuario(uid) {
       let usuario = {
         uid,
-        userName: "newton",
+        userName: this.userName,
         nombre: this.f2.nombre,
         apellido: this.f2.apellido,
         fechaNacimiento: new Date(this.fechaNacimiento),
         sexo: "M",
-        biografia: "https://es.wikipedia.org/wiki/Isaac_Newton",
         fotoPerfil:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Sir_Isaac_Newton_%281643-1727%29.jpg/800px-1727%29.jpg",
       };
 
-      await db.collection("usuarios").doc(usuario.uid).set(usuario);
+      let userName = {
+        userName: this.userName,
+        uid
+      }
+
+      let batch = db.batch();
+
+      batch.set(db.collection('usuarios').doc(usuario.uid), usuario);
+      batch.set(db.collection('userNames').doc(this.userName.toLowerCase()), userName);
+
+      await batch.commit();
 
       this.actualizarUsuario(usuario);
+      this.mostrarExito(this.saludo);
     },
   },
   computed: {
@@ -454,6 +521,25 @@ export default {
       }
       if (!this.$v.f2.apellido.nombreCompuesto) {
         errores.push("Ingresa un apellido válido.");
+      }
+      return errores;
+    },
+    erroresUserName() {
+      let errores = [];
+      if (!this.$v.userName.$dirty) {
+        return errores;
+      }
+      if (!this.$v.userName.required) {
+        errores.push("Ingresa un nombre de usuario");
+      }
+      if (!this.$v.userName.minLength) {
+        errores.push("Ingresa al menos 5 caracteres.");
+      }
+      if (!this.$v.userName.maxLength) {
+        errores.push("Ingresa menos de 25 caracteres.");
+      }
+      if (!this.$v.userName.alphaNum) {
+        errores.push("Ingresa un nombre de usuario válido.");
       }
       return errores;
     },

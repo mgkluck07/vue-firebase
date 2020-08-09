@@ -10,6 +10,7 @@
         top
         right
         @click="edit = !edit"
+        v-if="perfilPropio"
       >
         <v-fade-transition mode="out-in">
           <v-icon v-if="!edit" :key="1">edit</v-icon>
@@ -33,7 +34,15 @@
             <span v-else>Agrega una descripción</span>
           </div>
         </v-layout>
-        <a class="ma-2 link" :href="usuario.biografia" target="_blank">Biografía</a>
+        <v-layout justify-center>
+          <v-btn @click="editarBiografia" v-if="edit" color="secondary" small flat icon>
+            <v-icon>edit</v-icon>
+          </v-btn>
+          <div class="ma-2">
+            <a v-if="usuario.biografia" class="ma-2 link" :href="usuario.biografia" target="_blank">Biografía</a>
+            <span v-else>Ingresa tu biografia</span>
+          </div>
+        </v-layout>
       </v-card-text>
     </v-card>
     <v-dialog v-model="editNames" max-width="400">
@@ -114,17 +123,55 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="editBio" max-width="400">
+      <v-card>
+        <v-toolbar color="primary" dark card>
+          <v-toolbar-title>Ingresa tu biografiá</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text>
+          <v-text-field
+            autofocus
+            @keyup.enter="guardar"
+            @blur="$v.biografia.$touch()"
+            :error-messages="erroresBiografia"
+            v-model="biografia"
+            label="Agregar tu biografia"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-text>
+          <v-layout>
+            <v-flex xs6>
+              <v-layout justify-start>
+                <v-btn @click="editBio = false">Cancelar</v-btn>
+              </v-layout>
+            </v-flex>
+            <v-flex xs6>
+              <v-layout justify-end>
+                <v-btn
+                  :depressed="$v.biografia.$invalid"
+                  :disabled="$v.biografia.$invalid"
+                  color="secondary"
+                  @click="guardarBiografia"
+                >Guardar</v-btn>
+              </v-layout>
+            </v-flex>
+          </v-layout>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-layout>
 </template>
 
 <script>
-import { required, minLength, maxLength } from "vuelidate/lib/validators";
+import { required, minLength, maxLength, url } from "vuelidate/lib/validators";
 import { nombreCompuesto } from "@/utilidades/validaciones";
-import { mapState, mapMutations } from "vuex";
-import { db } from "@/firebase";
+import { mapMutations } from "vuex";
+import { db,auth } from "@/firebase";
 export default {
   computed: {
-    ...mapState("sesion", ["usuario"]),
+    perfilPropio() {
+      return this.usuario && this.usuario.uid == auth.currentUser.uid;
+    },
     erroresNombre() {
       let errores = [];
       if (!this.$v.f2.nombre.$dirty) {
@@ -176,17 +223,33 @@ export default {
       }
       return errores;
     },
+    erroresBiografia() {
+      let errores = [];
+      if (!this.$v.biografia.$dirty) {
+        return errores;
+      }
+      if (!this.$v.biografia.required) {
+        errores.push("Ingresa tu biografia");
+      }
+      if (!this.$v.biografia.url) {
+        errores.push("Tu biografia debe ser una url.");
+      }
+      return errores;
+    },
   },
   data() {
     return {
       edit: false,
       editNames: false,
       editDescription: false,
+      editBio: false,
       f2: {
         nombre: "",
         apellido: "",
       },
       descripcion: "",
+      biografia: "",
+      usuario: null,
     };
   },
   validations: {
@@ -208,10 +271,46 @@ export default {
       required,
       maxLength: maxLength(300),
     },
+    biografia: {
+      required,
+      url,
+    },
+  },
+  created() {
+    this.consultarUsuario();
+  },
+  watch: {
+    '$route' () {
+      this.consultarUsuario();
+    },
   },
   methods: {
-    ...mapMutations(["mostrarError", "mostrarOcupado", "ocultarOcupado"]),
-    ...mapMutations("sesion", ["actualizarNombres", "actualizarDescripcion"]),
+    ...mapMutations(["mostrarExito","mostrarError", "mostrarOcupado", "ocultarOcupado"]),
+    ...mapMutations("sesion", ["actualizarNombres", "actualizarDescripcion", "actualizarBiografia"]),
+    async consultarUsuario() {
+      let userNameParametro = this.$route.params.userName.toLowerCase();
+
+      this.mostrarOcupado({titulo: 'Consultando información',mensaje: 'Cargando datos...'});
+
+      try {
+        let userNameDoc = await db.collection('userNames').doc(userNameParametro).get();
+        if(userNameDoc.exists){
+          let userName = userNameDoc.data();
+          let usuarioDoc = await db.collection('usuarios').doc(userName.uid).get();
+          if(usuarioDoc.exists){
+            this.usuario = usuarioDoc.data();
+          } else {
+            this.$router.push({name: '404'});
+          }
+        } else {
+          this.$router.push({name: '404'});
+        }
+      } catch (error) {
+        this.$router.push({name: '404'});
+      } finally {
+        this.ocultarOcupado();
+      }
+    },
     editarNombres() {
       this.f2.nombre = this.usuario.nombre;
       this.f2.apellido = this.usuario.apellido;
@@ -233,6 +332,8 @@ export default {
         let usuario = { nombre: this.f2.nombre, apellido: this.f2.apellido };
         await db.collection("usuarios").doc(this.usuario.uid).update(usuario);
         this.actualizarNombres(usuario);
+        this.usuario.nombre = this.f2.nombre;
+        this.usuario.apellido = this.f2.apellido;
         this.editNames = false;
         this.edit = false;
       } catch (error) {
@@ -260,8 +361,38 @@ export default {
         let usuario = { descripcion: this.descripcion };
         await db.collection("usuarios").doc(this.usuario.uid).update(usuario);
         this.actualizarDescripcion(usuario);
+        this.usuario.descripcion = this.descripcion;
         this.editDescription = false;
         this.edit = false;
+      } catch (error) {
+        this.mostrarError("Ocurrió un error actualizando tus datos");
+      } finally {
+        this.ocultarOcupado();
+      }
+    },
+    editarBiografia() {
+      if (this.usuario.biografia) {
+        this.biografia = this.usuario.biografia;
+      }
+      this.editBio = true;
+    },
+    async guardarBiografia() {
+      if (this.biografia == this.usuario.biografia) {
+        this.editBio = false;
+        return;
+      }
+      this.mostrarOcupado({
+        titulo: "Actualizando información",
+        mensaje: "Estamos guardando tu biografia",
+      });
+      try {
+        let usuario = { biografia: this.biografia };
+        await db.collection("usuarios").doc(this.usuario.uid).update(usuario);
+        this.actualizarBiografia(usuario);
+        this.usuario.biografia = this.biografia;
+        this.editBio = false;
+        this.edit = false;
+        this.mostrarExito("Se guardo correctamente tu biografia");
       } catch (error) {
         this.mostrarError("Ocurrió un error actualizando tus datos");
       } finally {

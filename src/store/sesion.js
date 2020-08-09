@@ -18,6 +18,10 @@ export default {
       if(!state.usuario) { return }
       state.usuario.descripcion = payload.descripcion;
     },
+    actualizarBiografia(state, payload) {
+      if(!state.usuario) { return }
+      state.usuario.biografia = payload.biografia;
+    },
   },
   actions: {
     cerrarSesion({ commit }) {

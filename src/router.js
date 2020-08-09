@@ -33,22 +33,22 @@ const router = new Router({
       component: Login,
     },
     {
-      path: "/registro",
+      path: "/sesion/registro",
       name: "registro",
       component: Registro,
     },
     {
-      path: "/verificacion-email",
+      path: "/sesion/verificacion-email",
       name: "verificacion-email",
       component: VerificacionEmail,
     },
     {
-      path: "/acciones-email",
+      path: "/sesion/acciones-email",
       name: "acciones-email",
       component: AccionesEmail,
     },
     {
-      path: "/perfil",
+      path: "/usuario/:userName",
       name: "perfil",
       component: Perfil,
       meta: {
