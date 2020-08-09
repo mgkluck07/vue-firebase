@@ -1,11 +1,12 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import sesion from './sesion'
+import teatro from './teatro'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    usuario: null,
     notificacion: {
       visible: false,
       mensaje: '',
@@ -18,9 +19,6 @@ export default new Vuex.Store({
     }
   },
   mutations: {
-    actualizarUsuario(state, usuario){
-      state.usuario = usuario;
-    },
     mostrarInformacion(state, mensaje){
       state.notificacion.mensaje = mensaje;
       state.notificacion.color = 'info';
@@ -54,17 +52,11 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    salir({commit}){
-      commit('actualizarUsuario',null);
-    }
   },
   getters: {
-    saludo(state){
-      if(!state.usuario){
-        return null;
-      }
-      let vocal = state.usuario.sexo && state.usuario.sexo == 'F' ? 'a' : 'o';
-      return `¡Bienvenid${vocal} ${state.usuario.nombre}!`;
-    }
+  },
+  modules: {
+    sesion,
+    teatro
   }
 })

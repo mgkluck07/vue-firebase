@@ -1,8 +1,9 @@
-const nombreCompuesto = value => {
-    if(value === undefined || value === null || value === ''){
-        return true;
-    }
-    return /^(?! )(?!.* )[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ ]+$/.test(value);
-}
+const nombreCompuesto = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return true;
+  }
 
-export{nombreCompuesto};
+  return /^(?! )(?!.* {3})[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ ]+$/.test(value);
+};
+
+export { nombreCompuesto };
