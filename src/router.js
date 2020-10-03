@@ -8,11 +8,14 @@ import NotFound from "./views/NotFound.vue";
 import Login from "./views/Usuario/Login.vue";
 import Perfil from "./views/Usuario/Perfil.vue";
 import Registro from "./views/Usuario/Registro.vue";
+import EdicionFotoPerfil from "./views/Usuario/EdicionFotoPerfil.vue";
 
 import VerificacionEmail from "./views/Usuario/VerificacionEmail.vue";
 import AccionesEmail from "./views/Usuario/AccionesEmail.vue";
 import Obra from "./views/teatro/Obra.vue";
 import Presentacion from "./views/teatro/Presentacion.vue";
+
+import CargaInicial from "./views/teatro/CargaInicial.vue";
 
 import { auth } from "@/firebase";
 
@@ -48,6 +51,14 @@ const router = new Router({
       component: AccionesEmail,
     },
     {
+      path: '/sesion/edicion-foto-perfil',
+      name: 'edicion-foto-perfil',
+      component: EdicionFotoPerfil,
+      meta: {
+        autenticado: true,
+      },
+    },
+    {
       path: "/usuario/:userName",
       name: "perfil",
       component: Perfil,
@@ -63,6 +74,11 @@ const router = new Router({
       } */
     },
     {
+      path: '/admin/carga-inicial',
+      name: 'carga-inicial',
+      component: CargaInicial,
+    },
+    {
       path: "/obras/:oid",
       name: "obra",
       component: Obra,
@@ -71,6 +87,9 @@ const router = new Router({
       path: "/:oid/:tid/:fecha",
       name: "presentacion",
       component: Presentacion,
+      meta: {
+        autenticado: true,
+      },
     },
     {
       path: "/404",

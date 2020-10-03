@@ -10,17 +10,27 @@ export default {
       state.usuario = usuario;
     },
     actualizarNombres(state, payload) {
-      if(!state.usuario) { return }
+      if (!state.usuario) {
+        return;
+      }
       state.usuario.nombre = payload.nombre;
       state.usuario.apellido = payload.apellido;
     },
     actualizarDescripcion(state, payload) {
-      if(!state.usuario) { return }
+      if (!state.usuario) {
+        return;
+      }
       state.usuario.descripcion = payload.descripcion;
     },
     actualizarBiografia(state, payload) {
-      if(!state.usuario) { return }
+      if (!state.usuario) {
+        return;
+      }
       state.usuario.biografia = payload.biografia;
+    },
+    actualizarFotoPerfil(state, fotoPerfil) {
+      if (!state.usuario) return;
+      state.usuario.fotoPerfil = fotoPerfil;
     },
   },
   actions: {
@@ -43,7 +53,11 @@ export default {
               router.push({ name: "home" });
               break;
             case "acciones-email":
-              commit("mostrarExito", `${getters.saludo}, tu contraseña ha sido cambiada correctamente.`, { root: true });
+              commit(
+                "mostrarExito",
+                `${getters.saludo}, tu contraseña ha sido cambiada correctamente.`,
+                { root: true }
+              );
               router.push({ name: "home" });
               break;
           }
@@ -64,6 +78,13 @@ export default {
       }
       let vocal = state.usuario.sexo && state.usuario.sexo == "F" ? "a" : "o";
       return `¡Bienvenid${vocal} ${state.usuario.nombre}!`;
+    },
+    fotoPerfil(state) {
+      if (!state.usuario || !state.usuario.fotoPerfil) {
+        return require("@/assets/fotoUsuario.png");
+      } else {
+        return state.usuario.fotoPerfil;
+      }
     },
   },
 };

@@ -21,10 +21,33 @@
 </template>
 
 <script>
-  import { mapState } from 'vuex'
+  import { db } from '@/firebase';
+  import { mapMutations } from 'vuex';
   export default {
-    computed: {
-      ...mapState('teatro',['obras'])
+    data() {
+      return {
+        obras: []
+      }
+    },
+    created() {
+      this.consultarObras();
+    },
+    methods: {
+      ...mapMutations(['mostrarAdvertencia', 'mostrarError']),
+      async consultarObras() {
+        try {
+          let docs = await db.collection('obras').where('activo', '==',true).get();
+          docs.forEach( doc => {
+            this.obras.push(doc.data());
+          });
+
+          if(this.obras.length == 0) {
+            this.mostrarAdvertencia('No hay obras disponibles en este momento.');
+          }
+        } catch (error) {
+          this.mostrarError('Ocurrió un error consultando las obras. Intentalo mas tarde.');
+        }
+      },
     },
   }
 </script>

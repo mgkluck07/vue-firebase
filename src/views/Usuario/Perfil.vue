@@ -19,14 +19,41 @@
       </v-btn>
       <v-card-text>
         <v-layout justify-center>
-          <v-btn @click="editarNombres" v-if="edit" small color="secondary" flat icon>
+          <v-btn
+            @click="editarNombres"
+            v-if="edit"
+            small
+            color="secondary"
+            flat
+            icon
+          >
             <v-icon>edit</v-icon>
           </v-btn>
           <div class="ma-2">{{ usuario.nombre }} {{ usuario.apellido }}</div>
         </v-layout>
-        <v-img class="ma-2 fotoPerfil" :src="usuario.fotoPerfil" alt></v-img>
+        <v-img class="ma-2 fotoPerfil" :src="fotoPerfil" alt>
+          <v-layout fill-height align-end justify-end>
+            <v-btn
+              v-if="edit"
+              :to="{ name: 'edicion-foto-perfil' }"
+              color="white"
+              outline
+              icon
+              large
+            >
+              <v-icon>edit</v-icon>
+            </v-btn>
+          </v-layout>
+        </v-img>
         <v-layout justify-center>
-          <v-btn @click="editarDescripcion" v-if="edit" color="secondary" small flat icon>
+          <v-btn
+            @click="editarDescripcion"
+            v-if="edit"
+            color="secondary"
+            small
+            flat
+            icon
+          >
             <v-icon>edit</v-icon>
           </v-btn>
           <div class="ma-2 descripcion">
@@ -35,11 +62,24 @@
           </div>
         </v-layout>
         <v-layout justify-center>
-          <v-btn @click="editarBiografia" v-if="edit" color="secondary" small flat icon>
+          <v-btn
+            @click="editarBiografia"
+            v-if="edit"
+            color="secondary"
+            small
+            flat
+            icon
+          >
             <v-icon>edit</v-icon>
           </v-btn>
           <div class="ma-2">
-            <a v-if="usuario.biografia" class="ma-2 link" :href="usuario.biografia" target="_blank">Biografía</a>
+            <a
+              v-if="usuario.biografia"
+              class="ma-2 link"
+              :href="usuario.biografia"
+              target="_blank"
+              >Biografía</a
+            >
             <span v-else>Ingresa tu biografia</span>
           </div>
         </v-layout>
@@ -80,7 +120,8 @@
                   :disabled="$v.f2.$invalid"
                   color="secondary"
                   @click="guardar"
-                >Guardar</v-btn>
+                  >Guardar</v-btn
+                >
               </v-layout>
             </v-flex>
           </v-layout>
@@ -116,7 +157,8 @@
                   :disabled="$v.descripcion.$invalid"
                   color="secondary"
                   @click="guardarDescripcion"
-                >Guardar</v-btn>
+                  >Guardar</v-btn
+                >
               </v-layout>
             </v-flex>
           </v-layout>
@@ -152,7 +194,8 @@
                   :disabled="$v.biografia.$invalid"
                   color="secondary"
                   @click="guardarBiografia"
-                >Guardar</v-btn>
+                  >Guardar</v-btn
+                >
               </v-layout>
             </v-flex>
           </v-layout>
@@ -165,10 +208,11 @@
 <script>
 import { required, minLength, maxLength, url } from "vuelidate/lib/validators";
 import { nombreCompuesto } from "@/utilidades/validaciones";
-import { mapMutations } from "vuex";
-import { db,auth } from "@/firebase";
+import { mapGetters, mapMutations } from "vuex";
+import { db, auth } from "@/firebase";
 export default {
   computed: {
+    ...mapGetters("sesion", ["fotoPerfil"]),
     perfilPropio() {
       return this.usuario && this.usuario.uid == auth.currentUser.uid;
     },
@@ -280,33 +324,51 @@ export default {
     this.consultarUsuario();
   },
   watch: {
-    '$route' () {
+    $route() {
       this.consultarUsuario();
     },
   },
   methods: {
-    ...mapMutations(["mostrarExito","mostrarError", "mostrarOcupado", "ocultarOcupado"]),
-    ...mapMutations("sesion", ["actualizarNombres", "actualizarDescripcion", "actualizarBiografia"]),
+    ...mapMutations([
+      "mostrarExito",
+      "mostrarError",
+      "mostrarOcupado",
+      "ocultarOcupado",
+    ]),
+    ...mapMutations("sesion", [
+      "actualizarNombres",
+      "actualizarDescripcion",
+      "actualizarBiografia",
+    ]),
     async consultarUsuario() {
       let userNameParametro = this.$route.params.userName.toLowerCase();
 
-      this.mostrarOcupado({titulo: 'Consultando información',mensaje: 'Cargando datos...'});
+      this.mostrarOcupado({
+        titulo: "Consultando información",
+        mensaje: "Cargando datos...",
+      });
 
       try {
-        let userNameDoc = await db.collection('userNames').doc(userNameParametro).get();
-        if(userNameDoc.exists){
+        let userNameDoc = await db
+          .collection("userNames")
+          .doc(userNameParametro)
+          .get();
+        if (userNameDoc.exists) {
           let userName = userNameDoc.data();
-          let usuarioDoc = await db.collection('usuarios').doc(userName.uid).get();
-          if(usuarioDoc.exists){
+          let usuarioDoc = await db
+            .collection("usuarios")
+            .doc(userName.uid)
+            .get();
+          if (usuarioDoc.exists) {
             this.usuario = usuarioDoc.data();
           } else {
-            this.$router.push({name: '404'});
+            this.$router.push({ name: "404" });
           }
         } else {
-          this.$router.push({name: '404'});
+          this.$router.push({ name: "404" });
         }
       } catch (error) {
-        this.$router.push({name: '404'});
+        this.$router.push({ name: "404" });
       } finally {
         this.ocultarOcupado();
       }
@@ -330,7 +392,10 @@ export default {
       });
       try {
         let usuario = { nombre: this.f2.nombre, apellido: this.f2.apellido };
-        await db.collection("usuarios").doc(this.usuario.uid).update(usuario);
+        await db
+          .collection("usuarios")
+          .doc(this.usuario.uid)
+          .update(usuario);
         this.actualizarNombres(usuario);
         this.usuario.nombre = this.f2.nombre;
         this.usuario.apellido = this.f2.apellido;
@@ -359,7 +424,10 @@ export default {
       });
       try {
         let usuario = { descripcion: this.descripcion };
-        await db.collection("usuarios").doc(this.usuario.uid).update(usuario);
+        await db
+          .collection("usuarios")
+          .doc(this.usuario.uid)
+          .update(usuario);
         this.actualizarDescripcion(usuario);
         this.usuario.descripcion = this.descripcion;
         this.editDescription = false;
@@ -387,7 +455,10 @@ export default {
       });
       try {
         let usuario = { biografia: this.biografia };
-        await db.collection("usuarios").doc(this.usuario.uid).update(usuario);
+        await db
+          .collection("usuarios")
+          .doc(this.usuario.uid)
+          .update(usuario);
         this.actualizarBiografia(usuario);
         this.usuario.biografia = this.biografia;
         this.editBio = false;
@@ -403,7 +474,6 @@ export default {
 };
 </script>
 
-
 <style>
 .fotoPerfil {
   width: 200px;
@@ -414,7 +484,7 @@ export default {
   font-size: 1rem;
   color: #553f75;
 }
-.descipcion{
+.descipcion {
   text-align: justify;
 }
 </style>
