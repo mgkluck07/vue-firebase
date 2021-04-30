@@ -20,8 +20,8 @@
     "vue-filepond": "^6.0.3",
     "vue-router": "^3.4.2",
     "vuelidate": "^0.7.5",
+    "vuex": "^3.6.2"
     "vuetify": "^2.1.9",
-    "vuex": "^3.5.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.12.1",
