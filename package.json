@@ -12,7 +12,7 @@
     "cropperjs": "^1.5.9",
     "filepond": "^4.20.1",
     "filepond-plugin-file-validate-type": "^1.2.5",
-    "firebase": "^7.21.1",
+    "firebase": "^8.0.1",
     "material-design-icons-iconfont": "^3.0.3",
     "roboto-fontface": "*",
     "uuid": "^8.3.2",
@@ -20,7 +20,7 @@
     "vue-filepond": "^6.0.3",
     "vue-router": "^3.4.2",
     "vuelidate": "^0.7.5",
-    "vuetify": "^1.5.24",
+    "vuetify": "^2.1.9",
     "vuex": "^3.5.1"
   },
   "devDependencies": {
