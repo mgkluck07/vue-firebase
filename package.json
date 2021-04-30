@@ -15,7 +15,7 @@
     "firebase": "^8.0.1",
     "material-design-icons-iconfont": "^3.0.3",
     "roboto-fontface": "*",
-    "uuid": "^8.3.0",
+    "uuid": "^8.3.2",
     "vue": "^2.6.11",
     "vue-filepond": "^6.0.3",
     "vue-router": "^3.4.2",
